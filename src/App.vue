@@ -4,7 +4,7 @@ const route = useRoute()
 </script>
 
 <template>
-  <router-view :key="route.path"></router-view>
+  <router-view :key="`${route.path}Key`"></router-view>
 </template>
 
 <style scoped lang="scss">
