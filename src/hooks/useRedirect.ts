@@ -3,7 +3,7 @@ export function useRedirect() {
     const userInfo = localStorage.getItem('st-admin-user')
 
     if (userInfo) {
-      return '/home'
+      return '/home/class'
     } else {
       return '/login'
     }

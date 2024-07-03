@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  $END$
+  <div>讨论管理</div>
 </template>
 
 <style scoped lang="scss">

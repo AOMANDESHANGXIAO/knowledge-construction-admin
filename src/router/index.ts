@@ -21,7 +21,41 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: 'home',
     },
-    component: () => import('@/views/Home/index.vue'),
+    children: [
+      {
+        name: 'classManage',
+        path: 'class',
+        meta: {
+          title: 'classManage',
+        },
+        component: () => import('@/views/Home/classManage/index.vue'),
+      },
+      {
+        name: 'discussManage',
+        path: 'discuss',
+        meta: {
+          title: 'discussManage',
+        },
+        component: () => import('@/views/Home/discussManage/index.vue'),
+      },
+      {
+        name: 'analysisManage',
+        path: 'analysis',
+        meta: {
+          title: 'analysisManage',
+        },
+        component: () => import('@/views/Home/analysisManage/index.vue'),
+      },
+      {
+        name: 'adminManage',
+        path: 'admin',
+        meta: {
+          title: 'adminManage',
+        },
+        component: () => import('@/views/Home/adminManage/index.vue'),
+      },
+    ],
+    component: () => import('@/views/Home/Index/index.vue'),
   },
   {
     name: '/login',
