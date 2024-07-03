@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <div>管理员管理</div>
+  <el-empty description="敬请期待"></el-empty>
 </template>
 
 <style scoped lang="scss">

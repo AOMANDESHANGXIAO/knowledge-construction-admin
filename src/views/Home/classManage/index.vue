@@ -97,7 +97,7 @@ const handleCreateClass = () => {
       >
     </div>
     <div class="st-table">
-      <el-skeleton :rows="15" animated />
+      <el-empty description="敬请期待"></el-empty>
     </div>
   </section>
 </template>
