@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { queryClassListApi, createClassApi } from '@/apis/class_'
-import { useVisible } from '@/hooks/useVisible'
-import { useLoading } from '@/hooks/useLoading'
+import { useControl } from '@/hooks/useControl'
 
 interface ClassListItem {
   class_id: number
@@ -23,13 +22,13 @@ const queryParams = ref({
 })
 queryClassList()
 
-const { visible, setVisible } = useVisible()
+const { control: visible, setControl: setVisible } = useControl()
 
 const formModel = ref({
   class_name: '',
 })
 
-const { loading, setLoading } = useLoading()
+const { control: loading, setControl: setLoading } = useControl()
 
 const handleCreateClass = () => {
   const params = {
@@ -97,7 +96,9 @@ const handleCreateClass = () => {
         >创建班级</el-button
       >
     </div>
-    <div class="st-table"></div>
+    <div class="st-table">
+      <el-skeleton :rows="15" animated />
+    </div>
   </section>
 </template>
 
@@ -128,7 +129,7 @@ const handleCreateClass = () => {
   .st-table {
     width: 100%;
     flex: 1;
-    background-color: skyblue;
+    // background-color: skyblue;
   }
 }
 </style>
