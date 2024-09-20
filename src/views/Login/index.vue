@@ -1,71 +1,62 @@
 <script lang="ts" setup>
-import { type LoginFormParams } from './type.ts'
 import { Lock, User } from '@element-plus/icons-vue'
-import { type FormRules, type FormInstance } from 'element-plus'
 import waveAnimation from '@/components/waveAnimation/index.vue'
-import { loginApi } from '@/apis/login/index.ts'
-import { useUserStore } from '@/store/modules/user.ts'
 import router from '@/router'
+import { reactive, ref } from 'vue'
+import { useUserStore } from '@/store/modules/user'
+import { type FormInstance, type FormRules } from 'element-plus'
+import AuthAPI, { LoginResult } from '@/apis/login'
+import useRequest from '@/hooks/useRequest'
+// const router = useRouter()
 
-defineOptions({
-  name: 'loginIndex',
-})
-
+/** 登录表单元素的引用 */
 const loginFormRef = ref<FormInstance | null>(null)
 
-const loginForm = ref<LoginFormParams>({
-  username: 'root',
-  password: 'stream',
+/** 验证码图片 URL */
+/** 登录表单数据 */
+const loginFormData = reactive({
+  username: '',
+  password: '',
 })
-
+/** 登录表单校验规则 */
 const loginFormRules: FormRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur' },
-  ],
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' },
+    { min: 6, max: 16, message: '长度在 6 到 16 个字符', trigger: 'blur' },
   ],
 }
 
-const userStore = useUserStore()
+/**
+ * 登录逻辑函数
+ */
+const { loading, run } = useRequest<LoginResult>({
+  apiFn: async () => {
+    return AuthAPI.login(loginFormData)
+  },
+  onSuccess: res => {
+    const { setUserStore } = useUserStore()
+    setUserStore(res)
+    router.push('/')
+  },
+  onFailure: () => {
+    console.log('登录失败')
+  },
+  onError: () => {
+    console.log('登录异常')
+  },
+})
 
-const setUserInfo = (params: {
-  username: string
-  access_token: string
-  id: number | string
-}) => {
-  userStore.setUserInfo(params)
-}
-
-const adminLogin = async () => {
-  loginFormRef.value?.validate(async (valid: boolean) => {
-    if (valid) {
-      const params = {
-        username: loginForm.value.username,
-        password: loginForm.value.password,
-      }
-      loginApi(params).then(res => {
-        const response: any = res
-        if (response.success) {
-          const data: any = res.data
-          const params = {
-            username: data.nickname,
-            access_token: data.token,
-            id: data.id,
-          }
-          setUserInfo(params)
-          console.log(params)
-          ElNotification({
-            title: '登录成功',
-            message: '欢迎回来',
-            type: 'success',
-          })
-          router.push('/')
-        }
+const handleLogin = () => {
+  loginFormRef.value?.validate((valid: boolean) => {
+    if (!valid) {
+      ElNotification({
+        title: '表单校验失败',
+        message: '请输入正确的用户名和密码',
+        type: 'error',
       })
     }
+    run()
   })
 }
 </script>
@@ -79,7 +70,7 @@ const adminLogin = async () => {
     <div class="login-form-container">
       <img src="@/assets/login/logo-text-2.png" alt="" />
       <el-form
-        :model="loginForm"
+        :model="loginFormData"
         :rules="loginFormRules"
         style="width: 100%"
         hide-required-asterisk
@@ -87,7 +78,7 @@ const adminLogin = async () => {
       >
         <el-form-item label="账号" prop="username">
           <el-input
-            v-model="loginForm.username"
+            v-model="loginFormData.username"
             placeholder="输入账号"
             type="text"
             :prefix-icon="User"
@@ -97,19 +88,20 @@ const adminLogin = async () => {
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input
-            v-model="loginForm.password"
+            v-model="loginFormData.password"
             placeholder="输入密码"
             type="password"
             :prefix-icon="Lock"
             size="large"
-            @keyup.enter="adminLogin"
+            @keyup.enter="handleLogin"
           ></el-input>
         </el-form-item>
         <el-button
           size="large"
           type="primary"
           style="width: 100%"
-          @click="adminLogin"
+          :loading="loading"
+          @click="handleLogin"
           >登 录</el-button
         >
       </el-form>

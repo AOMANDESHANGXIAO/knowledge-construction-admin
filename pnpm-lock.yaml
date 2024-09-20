@@ -8,6 +8,9 @@ dependencies:
   '@element-plus/icons-vue':
     specifier: ^2.3.1
     version: 2.3.1(vue@3.4.27)
+  '@types/lodash':
+    specifier: ^4.17.7
+    version: 4.17.7
   '@vueuse/core':
     specifier: ^10.11.0
     version: 10.11.0(vue@3.4.27)
@@ -17,6 +20,9 @@ dependencies:
   element-plus:
     specifier: ^2.7.4
     version: 2.7.4(vue@3.4.27)
+  lodash:
+    specifier: ^4.17.21
+    version: 4.17.21
   pinia:
     specifier: ^2.1.7
     version: 2.1.7(typescript@5.4.5)(vue@3.4.27)
@@ -505,11 +511,11 @@ packages:
   /@types/lodash-es@4.17.12:
     resolution: {integrity: sha512-0NgftHUcV4v34VhXm8QBSftKVXtbkBG3ViCjs6+eJ5a6y6Mi/jiFGPc1sC7QK+9BFhWrURE3EOggmWaSxL9OzQ==}
     dependencies:
-      '@types/lodash': 4.17.4
+      '@types/lodash': 4.17.7
     dev: false
 
-  /@types/lodash@4.17.4:
-    resolution: {integrity: sha512-wYCP26ZLxaT3R39kiN2+HcJ4kTd3U1waI/cY7ivWYqFP6pW3ZNpvi6Wd6PHZx7T/t8z0vlkXMg3QYLa7DZ/IJQ==}
+  /@types/lodash@4.17.7:
+    resolution: {integrity: sha512-8wTvZawATi/lsmNu10/j2hk1KEP0IvjubqPE3cu1Xz7xfXXt5oCq3SNUz4fMIP4XGF9Ky+Ue2tBA3hcS7LSBlA==}
     dev: false
 
   /@types/web-bluetooth@0.0.16:
@@ -803,7 +809,7 @@ packages:
       '@element-plus/icons-vue': 2.3.1(vue@3.4.27)
       '@floating-ui/dom': 1.6.5
       '@popperjs/core': /@sxzz/popperjs-es@2.11.7
-      '@types/lodash': 4.17.4
+      '@types/lodash': 4.17.7
       '@types/lodash-es': 4.17.12
       '@vueuse/core': 9.13.0(vue@3.4.27)
       async-validator: 4.2.5

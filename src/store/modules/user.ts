@@ -1,31 +1,42 @@
-import { defineStore } from 'pinia'
+import { ref } from "vue"
+import store from "@/store"
+import { defineStore } from "pinia"
 
-interface UserInfoParams {
-  access_token: string
-  username: string
-  id: number | string
+export const useUserStore = defineStore("user", () => {
+  const ACCESS_TOKEN_KEY = "ACCESS_TOKEN"
+  const initToken = () => {
+    return localStorage.getItem(ACCESS_TOKEN_KEY)
+  }
+
+  const token = ref<string>(initToken() || "")
+  const username = ref<string>("")
+  const nickname = ref<string>("")
+
+  const setUserStore = (data: { username: string; token: string; nickname: string }) => {
+    username.value = data.username
+    nickname.value = data.nickname
+    token.value = data.token
+    setToken()
+  }
+
+  const getToken = () => {
+    return token.value
+  }
+
+  const setToken = () => {
+    localStorage.setItem(ACCESS_TOKEN_KEY, token.value)
+  }
+
+  return {
+    token,
+    username,
+    nickname,
+    setUserStore,
+    getToken
+  }
+})
+
+/** 在 setup 外使用 */
+export function useUserStoreHook() {
+  return useUserStore(store)
 }
-
-export const useUserStore = defineStore(
-  'st-admin-user',
-  () => {
-    const access_token = ref<string>('')
-    const username = ref<string>('')
-    const id = ref<string | number>('')
-
-    const setUserInfo = (params: UserInfoParams) => {
-      access_token.value = params.access_token
-      username.value = params.username
-      id.value = params.id
-      console.log('store', params)
-    }
-
-    return {
-      access_token,
-      username,
-      id,
-      setUserInfo,
-    }
-  },
-  { persist: true }
-)

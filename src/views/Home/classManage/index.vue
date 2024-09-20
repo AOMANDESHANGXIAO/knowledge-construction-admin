@@ -1,62 +1,80 @@
 <script setup lang="ts">
-import { queryClassListApi, createClassApi } from '@/apis/class_'
-import { useControl } from '@/hooks/useControl'
-
-interface ClassListItem {
-  class_id: number
-  class_name: string
-}
-
-const classList = ref<ClassListItem[]>([])
-
-const queryClassList = () => {
-  queryClassListApi().then(res => {
-    if (res.success) {
-      const { data } = res
-      classList.value = data.list
-    }
-  })
-}
-const queryParams = ref({
-  class_id: '',
-})
-queryClassList()
-
-const { control: visible, setControl: setVisible } = useControl()
-
-const formModel = ref({
+import ClassAPI, {
+  QueryAllResult,
+  QueryStudentByClassIdResult,
+} from '@/apis/class_'
+import useRequest from '@/hooks/useRequest'
+import useState from '@/hooks/useState'
+import useTable from '@/hooks/useTable'
+import columns from './column'
+/**
+ * 查询班级列表逻辑
+ */
+const [classList, setClassList] = useState<QueryAllResult['list']>([])
+const [visible, setVisible] = useState(false)
+const [formModel] = useState({
   class_name: '',
 })
-
-const { control: loading, setControl: setLoading } = useControl()
-
-const handleCreateClass = () => {
-  const params = {
-    class_name: formModel.value.class_name,
+useRequest<QueryAllResult>({
+  apiFn: async () => {
+    return ClassAPI.queryAll()
+  },
+  onSuccess(res) {
+    setClassList(res.list)
+  },
+  onFailure() {
+    ElNotification({
+      title: '提示',
+      message: '获取班级列表失败',
+      type: 'error',
+    })
+  },
+  immediate: true,
+})
+/**
+ * 创建班级逻辑
+ */
+const { run: create, loading } = useRequest({
+  apiFn: async () => {
+    return ClassAPI.createClassApi(formModel.value.class_name)
+  },
+  onSuccess() {
+    ElNotification({
+      title: '提示',
+      message: '创建班级成功',
+      type: 'success',
+    })
+  },
+  onError() {
+    ElNotification({
+      title: '提示',
+      message: '创建失败',
+      type: 'error',
+    })
+  },
+})
+/**
+ * 查询班级信息逻辑
+ */
+const queryParams = ref({
+  id: 0,
+})
+watch(
+  () => classList.value,
+  () => {
+    // 等待classList查询完毕
+    queryParams.value.id = classList.value[0].id
+    getData()
   }
-  setLoading(true)
-  createClassApi(params)
-    .then(res => {
-      if (res.success) {
-        ElNotification({
-          title: '创建班级成功',
-          message: '班级创建成功',
-          type: 'success',
-        })
-        queryClassList()
-        setVisible(false)
-      } else {
-        ElNotification({
-          title: '创建班级失败',
-          message: res.message,
-          type: 'error',
-        })
-      }
-    })
-    .finally(() => {
-      setLoading(false)
-    })
-}
+)
+
+const { data, currentPage, pageSize, totalNum, getData } = useTable<
+  { id: number },
+  QueryStudentByClassIdResult
+>({
+  url: '/classroom/user',
+  queryParams: queryParams,
+})
 </script>
 
 <template>
@@ -72,32 +90,63 @@ const handleCreateClass = () => {
         <el-button type="primary" plain @click="setVisible(false)"
           >取 消</el-button
         >
-        <el-button type="primary" @click="handleCreateClass" :loading="loading"
+        <el-button
+          type="primary"
+          @click="
+            () => {
+              create()
+            }
+          "
+          :loading="loading"
           >创 建</el-button
         >
       </el-form>
     </el-dialog>
     <div class="control-group">
       <el-select
-        v-model="queryParams.class_id"
+        v-model="queryParams.id"
         placeholder="请选择查询班级"
         size="large"
         style="width: 200px"
       >
         <el-option
           v-for="item in classList"
-          :key="item.class_id"
+          :key="item.id"
           :label="item.class_name"
-          :value="item.class_id"
+          :value="item.id"
         ></el-option>
       </el-select>
-      <el-button type="primary" size="large" plain>查 询</el-button>
+      <el-button
+        type="primary"
+        size="large"
+        plain
+        @click="
+          () => {
+            getData()
+          }
+        "
+        >查 询</el-button
+      >
       <el-button type="primary" size="large" @click="setVisible(true)"
         >创建班级</el-button
       >
     </div>
     <div class="st-table">
-      <el-empty description="敬请期待"></el-empty>
+      <el-table :data="data" style="width: 100%" stripe border>
+        <el-table-column
+          v-for="col in columns"
+          :key="col.prop"
+          v-bind="col"
+        ></el-table-column>
+      </el-table>
+      <el-pagination
+        style="margin-top: 10px"
+        background
+        layout="prev, pager, next"
+        :total="totalNum"
+        v-model:page-size="pageSize"
+        v-model:current-page="currentPage"
+      ></el-pagination>
     </div>
   </section>
 </template>
