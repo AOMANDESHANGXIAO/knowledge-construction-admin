@@ -1,7 +1,7 @@
 import { QueryStudentByClassIdResult } from '@/apis/class_'
 // 定义 el-table 的 column 列表
 const columns: {
-  prop: keyof QueryStudentByClassIdResult['list'][number]
+  prop: keyof QueryStudentByClassIdResult['list'][number] | 'index'
   label: string
   width: string | number
 }[] = [

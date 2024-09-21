@@ -44,6 +44,7 @@ const { run: create, loading } = useRequest({
       message: '创建班级成功',
       type: 'success',
     })
+    getData()
   },
   onError() {
     ElNotification({
@@ -133,6 +134,7 @@ const { data, currentPage, pageSize, totalNum, getData } = useTable<
     </div>
     <div class="st-table">
       <el-table :data="data" style="width: 100%" stripe border>
+        <el-table-column type="index" width="50" />
         <el-table-column
           v-for="col in columns"
           :key="col.prop"

@@ -1,13 +1,19 @@
 <script lang="ts" setup>
-import {ChatLineRound, Coffee, DataLine, Document, Location, Notification, Setting} from "@element-plus/icons-vue";
-import {useCssVar} from "@vueuse/core";
-import {useRouter, useRoute} from 'vue-router'
+import {
+  ChatLineRound,
+  Coffee,
+  DataLine,
+  Notification,
+  Setting,
+} from '@element-plus/icons-vue'
+import { useCssVar } from '@vueuse/core'
+import { useRouter, useRoute } from 'vue-router'
+import { useUserStore } from '@/store/modules/user'
 
 defineOptions({
   name: 'homeIndex',
 })
 const coolBlack = useCssVar('--st-cool-black-color')
-
 
 // 根据当前的路由确定el-menu-item的激活状态
 const router = useRouter()
@@ -18,18 +24,29 @@ const defaultActive = computed(() => {
 })
 
 const route = useRoute()
+const userStore = useUserStore()
+const logout = () => {
+  console.log('退出登录')
+  userStore.logOut()
+}
 </script>
 
 <template>
   <el-row class="st-home-container">
     <div class="menu-tab">
       <div class="title">思维之流</div>
-      <el-menu class="st-home-menu" active-text-color="#fff" :background-color="coolBlack" text-color="#fff" router
-               :default-active="defaultActive">
+      <el-menu
+        class="st-home-menu"
+        active-text-color="#fff"
+        :background-color="coolBlack"
+        text-color="#fff"
+        router
+        :default-active="defaultActive"
+      >
         <el-menu-item index="/home/class">
           <section class="st-menu-item">
             <el-icon>
-              <Notification/>
+              <Notification />
             </el-icon>
             <span>班级管理</span>
           </section>
@@ -37,7 +54,7 @@ const route = useRoute()
         <el-menu-item index="/home/discuss">
           <section class="st-menu-item">
             <el-icon>
-              <ChatLineRound/>
+              <ChatLineRound />
             </el-icon>
             <span>讨论管理</span>
           </section>
@@ -45,7 +62,7 @@ const route = useRoute()
         <el-menu-item index="/home/analysis">
           <section class="st-menu-item">
             <el-icon>
-              <DataLine/>
+              <DataLine />
             </el-icon>
             <span>学习分析</span>
           </section>
@@ -53,15 +70,26 @@ const route = useRoute()
         <el-menu-item index="/home/admin">
           <section class="st-menu-item">
             <el-icon>
-              <Coffee/>
+              <Coffee />
             </el-icon>
             <span>管理员</span>
           </section>
         </el-menu-item>
+        <!-- 退出登录 -->
+        <el-popconfirm title="Are you sure to layout?" @confirm="logout">
+          <template #reference>
+            <el-menu-item class="logout-button">
+              <section class="st-menu-item">
+                <el-icon><Setting /></el-icon>
+                <span>退出登录</span>
+              </section>
+            </el-menu-item>
+          </template>
+        </el-popconfirm>
       </el-menu>
     </div>
     <div class="router-container">
-      <router-view :key="route.path"/>
+      <router-view :key="route.path" />
     </div>
   </el-row>
 </template>
@@ -117,6 +145,18 @@ const route = useRoute()
 
     &:deep(.el-menu-item.is-active) {
       background-color: var(--st-theme-color);
+    }
+
+    .logout-button {
+      position: absolute; /* 使用绝对定位 */
+      bottom: 0; /* 放置在底部 */
+      width: 100%; /* 宽度与菜单相同 */
+      background-color: var(--st-cool-black-color); /* 继承背景颜色 */
+      border-top: 1px solid #333; /* 可选：添加顶部边框 */
+      margin-bottom: 10px;
+      &:hover {
+        background-color: var(--st-theme-color);
+      }
     }
   }
 }

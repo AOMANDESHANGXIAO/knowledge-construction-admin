@@ -1,62 +1,35 @@
 <script setup lang="ts">
-import { useControl } from '@/hooks/useControl'
-import { queryClassListApi } from '@/apis/class_'
-import { createDiscussionApi } from '@/apis/discussion'
-import { useUserStore } from '@/store/modules/user'
-
-const { control: visible, setControl: setVisible } = useControl()
-
-interface ClassListItem {
-  class_id: number
-  class_name: string
-}
-
-const classList = ref<ClassListItem[]>([])
-
-const queryClassList = () => {
-  queryClassListApi().then(res => {
-    if (res.success) {
-      const { data } = res
-      classList.value = data.list
-    }
-  })
-}
-
-queryClassList()
-
-const formModel = ref({
+import ClassAPI, {
+  QueryAllResult,
+  QueryStudentByClassIdResult,
+} from '@/apis/class_'
+import useRequest from '@/hooks/useRequest'
+import useState from '@/hooks/useState'
+/**
+ * 查询班级列表逻辑
+ */
+const [classList, setClassList] = useState<QueryAllResult['list']>([])
+const [visible, setVisible] = useState(false)
+const [formModel] = useState({
+  class_id: undefined,
   topic_content: '',
-  class_id: '',
 })
-
-const { control: loading, setControl: setLoading } = useControl()
-
-const handleCreateTopic = () => {
-  const params = {
-    topic_content: formModel.value.topic_content,
-    class_id: Number(formModel.value.class_id),
-    created_user_id: Number(useUserStore().id),
-  }
-  setLoading(true)
-  createDiscussionApi(params).then(res => {
-    if (res.success) {
-      setVisible(false)
-      ElNotification({
-        title: '创建讨论成功',
-        message: '讨论创建成功',
-        type: 'success',
-      })
-    } else {
-      ElNotification({
-        title: '创建讨论失败',
-        message: res.message,
-        type: 'error',
-      })
-    }
-  }).finally(()=>{
-    setLoading(false)
-  })
-}
+useRequest<QueryAllResult>({
+  apiFn: async () => {
+    return ClassAPI.queryAll()
+  },
+  onSuccess(res) {
+    setClassList(res.list)
+  },
+  onFailure() {
+    ElNotification({
+      title: '提示',
+      message: '获取班级列表失败',
+      type: 'error',
+    })
+  },
+  immediate: true,
+})
 </script>
 
 <template>
@@ -71,9 +44,9 @@ const handleCreateTopic = () => {
           >
             <el-option
               v-for="item in classList"
-              :key="item.class_id"
+              :key="item.id"
               :label="item.class_name"
-              :value="item.class_id"
+              :value="item.id"
             ></el-option>
           </el-select>
         </el-form-item>
@@ -84,12 +57,17 @@ const handleCreateTopic = () => {
             placeholder="请输入讨论内容"
           ></el-input>
         </el-form-item>
-        <el-button type="primary" plain @click="setVisible(false)"
+        <el-button
+          type="primary"
+          plain
+          @click="
+            () => {
+              setVisible(false)
+            }
+          "
           >取 消</el-button
         >
-        <el-button type="primary" @click="handleCreateTopic" :loading="loading"
-          >创 建</el-button
-        >
+        <el-button type="primary" @click="">创 建</el-button>
       </el-form>
     </el-dialog>
     <div class="control-group">
