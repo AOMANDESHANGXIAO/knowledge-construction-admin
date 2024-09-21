@@ -7,6 +7,8 @@ import useRequest from '@/hooks/useRequest'
 import useState from '@/hooks/useState'
 import useTable from '@/hooks/useTable'
 import columns from './column'
+import myTable from '@/components/Table/index.vue'
+
 /**
  * 查询班级列表逻辑
  */
@@ -133,7 +135,14 @@ const { data, currentPage, pageSize, totalNum, getData } = useTable<
       >
     </div>
     <div class="st-table">
-      <el-table :data="data" style="width: 100%" stripe border>
+      <my-table
+        :data="data"
+        :columns="columns"
+        v-model:page-size="pageSize"
+        v-model:current-page="currentPage"
+        :total-num="totalNum"
+      ></my-table>
+      <!-- <el-table :data="data" style="width: 100%" stripe border>
         <el-table-column type="index" width="50" />
         <el-table-column
           v-for="col in columns"
@@ -148,7 +157,7 @@ const { data, currentPage, pageSize, totalNum, getData } = useTable<
         :total="totalNum"
         v-model:page-size="pageSize"
         v-model:current-page="currentPage"
-      ></el-pagination>
+      ></el-pagination> -->
     </div>
   </section>
 </template>

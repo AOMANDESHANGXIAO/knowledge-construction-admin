@@ -59,6 +59,14 @@ const logout = () => {
             <span>讨论管理</span>
           </section>
         </el-menu-item>
+        <el-menu-item index="/home/process">
+          <section class="st-menu-item">
+            <el-icon>
+              <Setting />
+            </el-icon>
+            <span>过程管理</span>
+          </section>
+        </el-menu-item>
         <el-menu-item index="/home/analysis">
           <section class="st-menu-item">
             <el-icon>

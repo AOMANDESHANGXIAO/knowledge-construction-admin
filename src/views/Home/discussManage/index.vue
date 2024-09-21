@@ -5,6 +5,10 @@ import useState from '@/hooks/useState'
 import DiscussionAPI from '@/apis/discussion'
 import { useUserStore } from '@/store/modules/user'
 import { FormInstance } from 'element-plus'
+import useTable from '@/hooks/useTable'
+import columns, { Topic } from './column'
+import myTable from '@/components/Table/index.vue'
+
 /**
  * 查询班级列表逻辑
  */
@@ -56,12 +60,11 @@ const formRef = ref<FormInstance | null>(null)
 const userStore = useUserStore()
 const { run: create, loading } = useRequest({
   apiFn: async () => {
-    console.log('created_user_id', userStore.user.id)
     const id = userStore.user.id
     return DiscussionAPI.create({
       topic_content: formModel.value.topic_content,
       topic_for_class_id: formModel.value.class_id as number,
-      created_user_id: id as number
+      created_user_id: id as number,
     })
   },
   onSuccess() {
@@ -97,6 +100,13 @@ const handleClickCreateBtn = () => {
     create()
   })
 }
+/**
+ * TODO: 查询讨论话题列表
+ */
+const { data, currentPage, pageSize, totalNum } = useTable<any, Topic>({
+  url: '/discuss/all',
+  immdeiate: true,
+})
 </script>
 
 <template>
@@ -155,7 +165,13 @@ const handleClickCreateBtn = () => {
       >
     </div>
     <div class="st-table">
-      <el-empty description="敬请期待"></el-empty>
+      <my-table
+        :data="data"
+        :columns="columns"
+        v-model:page-size="pageSize"
+        v-model:current-page="currentPage"
+        v-model:total-num="totalNum"
+      ></my-table>
     </div>
   </section>
 </template>

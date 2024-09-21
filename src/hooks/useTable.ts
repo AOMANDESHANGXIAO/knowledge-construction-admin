@@ -38,7 +38,7 @@ function useTable<T, D>(props: Option<T>) {
   } = props
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-
+  const [sort, setSort] = useState<'DESC' | 'ASC'>('ASC')
   const data = ref<D[]>([])
   const setData = (list: D[]) => {
     // @ts-ignore
@@ -54,6 +54,7 @@ function useTable<T, D>(props: Option<T>) {
         params: {
           page: currentPage.value,
           pageSize: pageSize.value,
+          sort: sort.value,
           ...queryParams?.value,
         },
       })
@@ -85,7 +86,11 @@ function useTable<T, D>(props: Option<T>) {
     immediate: immdeiate,
   })
 
-  watch([currentPage, pageSize], () => {
+  watch(currentPage, () => {
+    run()
+  })
+
+  watch(pageSize, () => {
     run()
   })
 
@@ -97,6 +102,8 @@ function useTable<T, D>(props: Option<T>) {
     data,
     currentPage,
     pageSize,
+    sort,
+    setSort,
     setCurrentPage,
     setPageSize,
     totalNum,

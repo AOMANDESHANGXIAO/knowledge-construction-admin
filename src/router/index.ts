@@ -54,6 +54,14 @@ const routes: Array<RouteRecordRaw> = [
         },
         component: () => import('@/views/Home/adminManage/index.vue'),
       },
+      {
+        name: 'processManage',
+        path: 'process',
+        meta: {
+          title: 'processManage',
+        },
+        component: () => import('@/views/Home/processManage/index.vue'),
+      },
     ],
     component: () => import('@/views/Home/Index/index.vue'),
   },
