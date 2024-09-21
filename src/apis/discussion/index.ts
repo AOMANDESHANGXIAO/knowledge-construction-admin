@@ -1,10 +1,20 @@
-import Service from '@/apis/index'
-import { CreateDiscussionParams } from './type'
-
-const createDiscussionApi = (params: CreateDiscussionParams) => {
-  return Service.post('/discuss/create', params)
+import Service, { PromiseResponse } from '@/apis/index'
+type CreateDiscussion = {
+  topic_content: string
+  created_user_id: number
+  topic_for_class_id: number
 }
+const URL = `discuss`
 
-export {
-  createDiscussionApi
+export default class DiscussionAPI {
+  /**
+   * 创建讨论
+   */
+  static async create(params: CreateDiscussion): PromiseResponse<any> {
+    return Service({
+      method: 'post',
+      data: params,
+      url: `${URL}/create`,
+    })
+  }
 }
