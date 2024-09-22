@@ -140,24 +140,8 @@ const { data, currentPage, pageSize, totalNum, getData } = useTable<
         :columns="columns"
         v-model:page-size="pageSize"
         v-model:current-page="currentPage"
-        :total-num="totalNum"
+        v-model:total-num="totalNum"
       ></my-table>
-      <!-- <el-table :data="data" style="width: 100%" stripe border>
-        <el-table-column type="index" width="50" />
-        <el-table-column
-          v-for="col in columns"
-          :key="col.prop"
-          v-bind="col"
-        ></el-table-column>
-      </el-table>
-      <el-pagination
-        style="margin-top: 10px"
-        background
-        layout="prev, pager, next"
-        :total="totalNum"
-        v-model:page-size="pageSize"
-        v-model:current-page="currentPage"
-      ></el-pagination> -->
     </div>
   </section>
 </template>

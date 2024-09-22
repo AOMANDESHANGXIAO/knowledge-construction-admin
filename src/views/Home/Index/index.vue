@@ -64,7 +64,7 @@ const logout = () => {
             <el-icon>
               <Setting />
             </el-icon>
-            <span>过程管理</span>
+            <span>知识建构</span>
           </section>
         </el-menu-item>
         <el-menu-item index="/home/analysis">
@@ -107,6 +107,8 @@ const logout = () => {
   display: flex;
   height: 100vh;
   width: 100vw;
+  overflow-x: auto;
+  overflow-y: hidden;
   //background-color: #888888;
 
   .menu-tab {
