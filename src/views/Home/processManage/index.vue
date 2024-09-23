@@ -1,8 +1,17 @@
 <script lang="ts" setup>
-import DiscussionAPI, { QueryTopicResult } from '@/apis/discussion'
+import DiscussionAPI, {
+  QueryTopicResult,
+  QueryIdeaResult,
+  UpdateRateInput,
+} from '@/apis/discussion'
 import useRequest from '@/hooks/useRequest'
 import ClassAPI, { QueryAllResult } from '@/apis/class_'
 import { useUserStore } from '@/store/modules/user'
+import rateCard from './components/rateCard.vue'
+import CommonAPI, { UserInfo, GroupInfo } from '@/apis/common'
+import FlowAPI from '@/apis/flow'
+import { EdgeType, NodeType } from './utils/convert'
+
 defineOptions({
   name: 'processManage',
 })
@@ -127,34 +136,214 @@ const handleChangeClass = async () => {
 /**
  * 打分
  */
-const ideaContent = ref(
-  '没有类型标注时，这个 event 参数会隐式地标注为 any 类型。这也会在 tsconfig.json 中配置了 "strict": true 或 "noImplicitAny": true 时报出一个 TS 错误。因此，建议显式地为事件处理函数的参数标注类型。此外，你在访问 event 上的属性时可能需要使用类型断言'
+type ideaType = 'idea' | 'group' | 'all'
+const ideaType = ref<undefined | ideaType>('all')
+const ideaTypeList: Array<{ label: string; value: ideaType }> = [
+  { label: '单独观点', value: 'idea' },
+  { label: '小组观点', value: 'group' },
+  { label: '全部', value: 'all' },
+]
+const currentGroupId = ref<undefined | number>(undefined)
+const groupList = ref<GroupInfo[]>([])
+const { run: getGroupList } = useRequest({
+  apiFn: async () => {
+    return CommonAPI.queryGroupsByClassId({
+      class_id: classId.value as number,
+    })
+  },
+  onSuccess(data) {
+    groupList.value = data.list
+  },
+  defaultNotify: false,
+})
+watch(
+  () => classId.value,
+  async () => {
+    if (classId.value !== undefined) {
+      await getGroupList()
+      currentGroupId.value = undefined
+    }
+  }
 )
-const CTElementsTextMAP = {
-  recognition: '识别',
-  understanding: '理解',
-  evaluation: '评价',
-  analysis: '分析',
-  create: '创造',
-}
-type CTElement = keyof typeof CTElementsTextMAP
-const CTElements: Ref<CTElement[]> = ref([
-  'recognition',
-  'understanding',
-  'evaluation',
-  'analysis',
-  'create',
-])
+const currentPublisherId = ref<undefined | number>(undefined)
+const publisherList = ref<UserInfo[]>([])
+const { run: getPublisherList } = useRequest({
+  apiFn: async () => {
+    return CommonAPI.queryStudentsByGroupId({
+      group_id: currentGroupId.value as number,
+    })
+  },
+  onSuccess(data) {
+    publisherList.value = data.list
+  },
+})
+watch(
+  () => currentGroupId.value,
+  async () => {
+    if (currentGroupId.value !== undefined) {
+      await getPublisherList()
+      currentPublisherId.value = undefined
+    }
+  }
+)
+// 查询观点
+const ideaList = ref<QueryIdeaResult[]>([])
+const currentIdeaId = ref<undefined | number>(undefined)
+const { run: getIdeaList } = useRequest({
+  apiFn: async () => {
+    let params: {
+      topicId: number
+      groupId?: number
+      ideaType?: 'idea' | 'group'
+      publisherId?: number
+    } = {
+      topicId: topicId.value as number,
+      groupId: currentGroupId.value as number,
+      publisherId: currentPublisherId.value as number,
+    }
+    if (ideaType.value !== 'all') {
+      params = {
+        ...params,
+        ideaType: ideaType.value,
+      }
+    }
+    return DiscussionAPI.queryIdeaForRate(params)
+  },
+  onSuccess(data) {
+    ideaList.value = data.list
+  },
+})
+watch(
+  () => [
+    topicId.value,
+    currentGroupId.value,
+    currentPublisherId.value,
+    ideaType.value,
+  ],
+  async () => {
+    if (!topicId.value) return
+    await getIdeaList()
+    currentIdeaId.value = undefined
+  }
+)
 
-const CTGrades: Ref<Record<keyof typeof CTElementsTextMAP, number>> = ref({
+const nodes = ref<NodeType[]>([])
+const edges = ref<EdgeType[]>([])
+
+const { run: getIdeaContent } = useRequest({
+  apiFn: async () => {
+    return FlowAPI.queryContentByNodeID({
+      node_id: currentIdeaId.value as number,
+    })
+  },
+  onSuccess(data) {
+    nodes.value = data.nodes
+    edges.value = data.edges
+  },
+})
+watch(
+  () => currentIdeaId.value,
+  async () => {
+    if (!currentIdeaId.value) return
+    await getIdeaContent()
+  }
+)
+
+const rateCardData = computed(() => {
+  const currentPosition = ideaList.value.findIndex(
+    item => item.id === currentIdeaId.value
+  )
+  const currentIdea = ideaList.value[currentPosition]
+  const totalPosition = ideaList.value.length
+  const currentPublisher = currentIdea?.nickname
+  const currentTeam = currentIdea?.group_name
+  return {
+    publisher: currentPublisher,
+    pulishTime: String(currentIdea?.created_time) || 'None',
+    team: currentTeam,
+    ideaType: currentIdea?.type,
+    initCTGrades: {
+      recognition: currentIdea?.recognition || 0,
+      understanding: currentIdea?.understanding || 0,
+      evaluation: currentIdea?.evaluation || 0,
+      analysis: currentIdea?.analysis || 0,
+      create: currentIdea?.create || 0,
+    },
+    currentPosition: currentPosition + 1, // index + 1
+    totalPosition,
+    ideaData: { nodes: nodes.value, edges: edges.value },
+  }
+})
+const handlePrev = () => {
+  if (currentIdeaId.value === undefined || currentIdeaId.value === 0) {
+    return
+  }
+
+  currentIdeaId.value -= 1
+}
+const handleNext = () => {
+  if (
+    currentIdeaId.value === undefined ||
+    currentIdeaId.value === ideaList.value.length - 1
+  ) {
+    return
+  }
+
+  currentIdeaId.value += 1
+}
+const submitData: UpdateRateInput = {
   recognition: 0,
   understanding: 0,
   evaluation: 0,
   analysis: 0,
   create: 0,
+  node_table_id: currentIdeaId.value as number,
+  version: 0,
+}
+const { run: updateRate, loading: updateRateLoading } = useRequest({
+  apiFn: async () => {
+    return DiscussionAPI.updateRate(submitData)
+  },
+  defaultNotify: true,
 })
-const handleSubmitScore = () => {
-  console.log('submit score')
+const handleSubmit = (val: {
+  recognition: number
+  understanding: number
+  evaluation: number
+  analysis: number
+  create: number
+}) => {
+  submitData.recognition = val.recognition
+  submitData.understanding = val.understanding
+  submitData.evaluation = val.evaluation
+  submitData.analysis = val.analysis
+  submitData.create = val.create
+  submitData.node_table_id = currentIdeaId.value as number
+  const currentIdea = ideaList.value.find(
+    item => item.id === currentIdeaId.value
+  )
+  submitData.version = currentIdea?.version || 0
+  let isValid = true
+  // submitData.version = ideaList.value[currentIdeaId.value as number].version
+  Object.keys(submitData).forEach(key => {
+    if (
+      submitData[key as keyof UpdateRateInput] === undefined ||
+      isNaN(submitData[key as keyof UpdateRateInput]) ||
+      typeof submitData[key as keyof UpdateRateInput] !== 'number'
+    ) {
+      isValid = false
+    }
+  })
+  if (!isValid) {
+    ElNotification({
+      type: 'error',
+      title: '提示',
+      message: '参数不合法',
+    })
+    return
+  }
+
+  updateRate()
 }
 </script>
 
@@ -210,14 +399,6 @@ const handleSubmitScore = () => {
               </el-form-item>
             </el-col>
           </el-row>
-          <!-- <el-popconfirm
-            title="你确定要调整话题吗?"
-            @confirm="handleNextStatus"
-          >
-            <template #reference>
-              <el-button type="primary" plain>确认调整话题</el-button>
-            </template>
-          </el-popconfirm> -->
           <el-popconfirm
             title="你确定要推进话题吗?"
             @confirm="handleNextStatus"
@@ -230,49 +411,96 @@ const handleSubmitScore = () => {
       </main>
       <!-- table区域，显示当前话题参与的每个组的情况 -->
       <footer>
-        <div class="left-container box">
-          <section class="title">⭐批判元素评分</section>
-          <el-text><b>已评价/总评价:</b> 5/15 </el-text>
-          <el-divider />
-          <section class="content">
-            <div class="left">
-              <div class="title">观点如下</div>
-              <div class="idea-content">
-                {{ ideaContent }}
-              </div>
-              <div class="bottom">
-                <h4>
-                  <span>发布者: 张三</span>&nbsp;&nbsp;<span
-                    >所属团队: 团队A</span
-                  >
-                </h4>
-                <section><span>发布时间: 2022-01-01</span></section>
-              </div>
-            </div>
-            <div class="right">
-              <el-form>
-                <el-form-item
-                  v-for="(item, index) in CTElements"
-                  :label="CTElementsTextMAP[item]"
-                  :key="index"
+        <el-row style="width: 100%; height: 500px">
+          <el-col :span="24">
+            <rate-card
+              :publish-time="rateCardData.pulishTime"
+              :publisher="rateCardData.publisher"
+              :team="rateCardData.team"
+              :init-c-t-grades="rateCardData.initCTGrades"
+              :idea-type="rateCardData.ideaType"
+              :current-position="rateCardData.currentPosition"
+              :total-position="rateCardData.totalPosition"
+              :idea-data="rateCardData.ideaData"
+              :submit-loading="updateRateLoading"
+              @prev="handlePrev"
+              @next="handleNext"
+              @submit="handleSubmit"
+            >
+              <template #header>
+                <el-form
+                  style="
+                    width: calc(100% - 30px);
+                    display: flex;
+                    align-items: center;
+                  "
                 >
-                  <el-radio-group v-model="CTGrades[item]">
-                    <el-radio value="1" size="small" border>包 含</el-radio>
-                    <el-radio value="2" size="small" border>不包含</el-radio>
-                  </el-radio-group>
-                </el-form-item>
-              </el-form>
-              <el-popconfirm @confirm="handleSubmitScore" title="确定要提交吗?">
-                <template #reference>
-                  <el-button type="primary" style="width: 100%"
-                    >提 交</el-button
+                  <el-row
+                    :gutter="20"
+                    style="display: flex; align-items: center; width: 100%"
                   >
-                </template>
-              </el-popconfirm>
-            </div>
-          </section>
-        </div>
-        <div class="right-container box"></div>
+                    <el-col :span="6">
+                      <el-form-item label="观点">
+                        <el-select placeholder="观点" v-model="currentIdeaId">
+                          <el-option
+                            v-for="item in ideaList"
+                            :key="item.renderId"
+                            :label="`${item.renderId}:${item.content}`"
+                            :value="item.id"
+                          ></el-option>
+                        </el-select>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="6">
+                      <el-form-item label="团队">
+                        <el-select
+                          placeholder="请选择团队"
+                          v-model="currentGroupId"
+                        >
+                          <el-option
+                            v-for="item in groupList"
+                            :key="item.id"
+                            :label="item.group_name"
+                            :value="item.id"
+                          ></el-option>
+                        </el-select>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="6">
+                      <el-form-item label="发布者">
+                        <el-select
+                          placeholder="请选择发布者"
+                          v-model="currentPublisherId"
+                        >
+                          <el-option
+                            v-for="item in publisherList"
+                            :key="item.id"
+                            :label="item.nickname"
+                            :value="item.id"
+                          ></el-option>
+                        </el-select>
+                      </el-form-item>
+                    </el-col>
+                    <el-col :span="6">
+                      <el-form-item label="类型">
+                        <el-select
+                          placeholder="请选择观点类型"
+                          v-model="ideaType"
+                          ><el-option
+                            v-for="item in ideaTypeList"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value"
+                          ></el-option>
+                        </el-select>
+                      </el-form-item>
+                    </el-col>
+                  </el-row>
+                </el-form>
+              </template>
+            </rate-card>
+          </el-col>
+        </el-row>
       </footer>
     </el-scrollbar>
   </div>
@@ -332,36 +560,15 @@ const handleSubmitScore = () => {
     padding: 20px;
   }
   footer {
-    display: flex;
-    gap: 20px;
     width: 100%;
+    min-height: 400px;
     padding: 20px;
-    flex: 1;
     background-color: #f5f5f5;
     .box {
       flex: 1;
       height: 100%;
       background-color: #fff;
       padding: 10px;
-    }
-    .left-container {
-      .content {
-        display: flex;
-        gap: 10px;
-        height: 100%;
-        .left {
-          flex: 1;
-          height: 100%;
-          // background-color: pink;
-        }
-        .right {
-          flex: 1;
-          height: 100%;
-          // background-color: pink;
-        }
-      }
-    }
-    .right-container {
     }
   }
 }

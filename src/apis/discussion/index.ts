@@ -23,11 +23,45 @@ type QueryTopicResult = {
     status: 'feedback' | 'summary' | 'close' | 'propose'
   }[]
 }
+type QueryRateInput = {
+  topicId: number
+  groupId?: number
+  ideaType?: 'idea' | 'group'
+  publisherId?: number
+}
+type QueryIdeaResult = {
+  renderId: number
+  id: number
+  type: 'idea' | 'group'
+  student_id: number
+  nickname: string
+  created_time: Date
+  group_id: number
+  group_name: string
+  recognition: number
+  understanding: number
+  evaluation: number
+  analysis: number
+  create: number
+  version: number
+  content: string
+}
+type UpdateRateInput = {
+  recognition: number
+  understanding: number
+  evaluation: number
+  analysis: number
+  create: number
+  node_table_id: number
+  version: number
+}
 export type {
   CreateDiscussion,
   UpdateDiscussion,
   QueryTopicInput,
   QueryTopicResult,
+  QueryIdeaResult,
+  UpdateRateInput,
 }
 const URL = `discuss`
 
@@ -65,6 +99,24 @@ export default class DiscussionAPI {
       method: 'get',
       url: `${URL}/queryTopic`,
       params,
+    })
+  }
+
+  static queryIdeaForRate(params: QueryRateInput): PromiseResponse<{
+    list: QueryIdeaResult[]
+  }> {
+    return Service({
+      method: 'get',
+      url: `${URL}/rate`,
+      params,
+    })
+  }
+
+  static updateRate(data: UpdateRateInput): PromiseResponse<any> {
+    return Service({
+      method: 'patch',
+      data,
+      url: `${URL}/rate`,
     })
   }
 }
