@@ -404,9 +404,9 @@ const handleRefresh = () => {
       message: '请先选择话题',
       type: 'info',
     })
+  } else {
+    getWordCloud()
   }
-  console.log('刷新')
-  getWordCloud()
 }
 </script>
 
@@ -431,8 +431,8 @@ const handleRefresh = () => {
       <!-- 控制器，包括修改状态的空间 -->
       <main>
         <section class="title">⭐控制话题</section>
-        <el-form>
-          <el-row :gutter="20">
+        <el-form style="padding-top: 10px">
+          <el-row :gutter="20" style="padding-top: 10px">
             <el-col :span="12">
               <el-form-item label="选择班级">
                 <el-select
@@ -581,7 +581,7 @@ const handleRefresh = () => {
         </el-row>
         <!-- 词云 -->
         <el-row style="width: 100%; min-height: 500px">
-          <div class="word-cloud-layout">
+          <div class="word-cloud-layout" v-if="wordCloudData.length > 0">
             <div v-for="(item, index) in wordCloudData" :key="index">
               <WordCloudUI
                 :dataset="generateWordCloudList(item.text)"
@@ -590,7 +590,13 @@ const handleRefresh = () => {
               ></WordCloudUI>
             </div>
           </div>
+          <div v-else class="empty-container">
+            <el-empty>暂未选择任何讨论</el-empty>
+          </div>
         </el-row>
+        <!-- 学生评价一览 -->
+        <!-- <el-row style="width: 100%; height: 100px" class="flex-space-between control-box">
+        </el-row> -->
       </footer>
     </el-scrollbar>
   </div>
@@ -722,5 +728,15 @@ const handleRefresh = () => {
       right: 0;
     }
   }
+}
+.empty-container {
+  width: 100%;
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  background-color: #fff;
+  border-radius: 10px;
 }
 </style>
