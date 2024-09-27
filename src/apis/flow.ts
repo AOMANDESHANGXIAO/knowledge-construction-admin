@@ -5,8 +5,13 @@ type QueryNodeContentResult = {
   nodes: NodeType[]
   edges: EdgeType[]
 }
-
-export type { QueryNodeContentResult }
+type QueryWordCloudResult = {
+  list: {
+    group_name: string
+    text: string
+  }[]
+}
+export type { QueryNodeContentResult, QueryWordCloudResult }
 
 const URL = '/flow'
 
@@ -18,6 +23,15 @@ export default class FlowAPI {
       method: 'get',
       url: `${URL}/query_content`,
       params,
+    })
+  }
+  static queryWordCloud(params: {
+    topic_id: number
+  }): PromiseResponse<QueryWordCloudResult> {
+    return Service({
+      method: 'get',
+      params,
+      url: `${URL}/wordCloud`,
     })
   }
 }

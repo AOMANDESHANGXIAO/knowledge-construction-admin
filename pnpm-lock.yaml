@@ -35,6 +35,9 @@ dependencies:
   vue:
     specifier: ^3.4.21
     version: 3.4.27(typescript@5.4.5)
+  vue-data-ui:
+    specifier: ^2.2.97
+    version: 2.2.97
   vue-router:
     specifier: '4'
     version: 4.3.2(vue@3.4.27)
@@ -1399,6 +1402,10 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
     dev: true
+
+  /vue-data-ui@2.2.97:
+    resolution: {integrity: sha512-LOq/lFBc96ldeW2OAlGot2bqWwbdkWpYvXvSwW0YQrprHf7NW4Y4jLui/od52GYq3EboZ/qrQoK7VMCIn1TILQ==}
+    dev: false
 
   /vue-demi@0.14.8(vue@3.4.27):
     resolution: {integrity: sha512-Uuqnk9YE9SsWeReYqK2alDI5YzciATE0r2SkA6iMAtuXvNTMNACJLJEXNXaEy94ECuBe4Sk6RzRU80kjdbIo1Q==}

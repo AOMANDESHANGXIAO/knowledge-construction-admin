@@ -9,9 +9,11 @@ import ClassAPI, { QueryAllResult } from '@/apis/class_'
 import { useUserStore } from '@/store/modules/user'
 import rateCard from './components/rateCard.vue'
 import CommonAPI, { UserInfo, GroupInfo } from '@/apis/common'
-import FlowAPI from '@/apis/flow'
 import { EdgeType, NodeType } from './utils/convert'
-
+import WordCloudUI from '@/components/wordCloudUI/index.vue'
+import { VueUiWordCloudDatasetItem } from 'vue-data-ui'
+import FlowAPI, { QueryWordCloudResult } from '@/apis/flow'
+import _ from 'lodash'
 defineOptions({
   name: 'processManage',
 })
@@ -345,6 +347,67 @@ const handleSubmit = (val: {
 
   updateRate()
 }
+/**
+ * 查询词云
+ */
+const wordCloudData = ref<QueryWordCloudResult['list']>([])
+const { run: getWordCloud, loading: cloudWordLoading } = useRequest({
+  apiFn: async () => {
+    return FlowAPI.queryWordCloud({
+      topic_id: topicId.value as number,
+    })
+  },
+  onSuccess(data) {
+    wordCloudData.value = data.list
+  },
+})
+watch(
+  () => topicId.value,
+  async () => {
+    if (topicId.value !== undefined) {
+      await getWordCloud()
+    }
+  }
+)
+const generateWordCloudList = (text: string): VueUiWordCloudDatasetItem[] => {
+  const list: VueUiWordCloudDatasetItem[] = []
+  const segmenter: {
+    segment: string
+    index: number
+    input: string
+    isWordLike: Boolean
+  }[] = Array.from(
+    // @ts-ignore
+    new Intl.Segmenter('cn', { granularity: 'word' }).segment(text)
+  )
+  const wordCounts = _.countBy(
+    segmenter.filter(item => item.segment.length > 1),
+    'segment'
+  )
+
+  for (const key in wordCounts) {
+    list.push({
+      name: key,
+      value: wordCounts[key],
+    })
+  }
+  return list
+}
+const BASE_WAIT_TIME = 150
+const getWaitTime = (index: number) => {
+  return (index + 1) * BASE_WAIT_TIME
+}
+const handleRefresh = () => {
+  if (!topicId.value) {
+    ElNotification({
+      title: '提示',
+      message: '请先选择话题',
+      type: 'info',
+    })
+  }
+  console.log('刷新')
+  getWordCloud()
+}
 </script>
 
 <template>
@@ -411,6 +474,7 @@ const handleSubmit = (val: {
       </main>
       <!-- table区域，显示当前话题参与的每个组的情况 -->
       <footer>
+        <!-- 评分 -->
         <el-row style="width: 100%; height: 500px">
           <el-col :span="24">
             <rate-card
@@ -501,6 +565,32 @@ const handleSubmit = (val: {
             </rate-card>
           </el-col>
         </el-row>
+        <!-- 控制词云刷新 -->
+        <el-row
+          style="width: 100%; height: 100px"
+          class="flex-space-between control-box"
+        >
+          <div class="title">小组讨论词云一览:</div>
+          <el-icon
+            :size="30"
+            @click="handleRefresh"
+            class="refresh-icon"
+            :class="{ 'is-loading': cloudWordLoading }"
+            ><Refresh
+          /></el-icon>
+        </el-row>
+        <!-- 词云 -->
+        <el-row style="width: 100%; min-height: 500px">
+          <div class="word-cloud-layout">
+            <div v-for="(item, index) in wordCloudData" :key="index">
+              <WordCloudUI
+                :dataset="generateWordCloudList(item.text)"
+                :title="item.group_name"
+                :wait-time="getWaitTime(index)"
+              ></WordCloudUI>
+            </div>
+          </div>
+        </el-row>
       </footer>
     </el-scrollbar>
   </div>
@@ -569,6 +659,67 @@ const handleSubmit = (val: {
       height: 100%;
       background-color: #fff;
       padding: 10px;
+    }
+  }
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.control-box {
+  margin-top: 30px;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 10px;
+  .title {
+    font-size: 30px;
+    font-weight: 300;
+    text-decoration: dashed;
+  }
+  .refresh-icon {
+    cursor: pointer;
+    transition: all 0.3s;
+    &.is-loading {
+      animation: rotate 1s linear infinite;
+      cursor: not-allowed;
+    }
+  }
+}
+.flex-space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.word-cloud-layout {
+  margin-top: 30px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 33%);
+  grid-gap: 10px;
+  // grid-template-rows: repeat(2, 50%);
+  background-color: #fff;
+
+  > div {
+    position: relative;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px #888888;
+    &:after {
+      content: '';
+      display: block;
+      padding-top: 100%;
+    }
+    // 设置内部实际内容的定位
+    > * {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
     }
   }
 }

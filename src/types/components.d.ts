@@ -40,5 +40,6 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     Table: typeof import('./../components/Table/index.vue')['default']
     WaveAnimation: typeof import('./../components/waveAnimation/index.vue')['default']
+    WordCloudUI: typeof import('./../components/wordCloudUI/index.vue')['default']
   }
 }
