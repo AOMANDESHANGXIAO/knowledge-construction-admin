@@ -371,6 +371,7 @@ watch(
 )
 const generateWordCloudList = (text: string): VueUiWordCloudDatasetItem[] => {
   const list: VueUiWordCloudDatasetItem[] = []
+  // 排序，取前十个词
   const segmenter: {
     segment: string
     index: number
@@ -380,6 +381,7 @@ const generateWordCloudList = (text: string): VueUiWordCloudDatasetItem[] => {
     // @ts-ignore
     new Intl.Segmenter('cn', { granularity: 'word' }).segment(text)
   )
+
   const wordCounts = _.countBy(
     segmenter.filter(item => item.segment.length > 1),
     'segment'
@@ -391,7 +393,7 @@ const generateWordCloudList = (text: string): VueUiWordCloudDatasetItem[] => {
       value: wordCounts[key],
     })
   }
-  return list
+  return _.orderBy(list, ['value'], ['desc']).slice(0, 15)
 }
 const BASE_WAIT_TIME = 150
 const getWaitTime = (index: number) => {
