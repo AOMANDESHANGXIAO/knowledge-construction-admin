@@ -19,8 +19,8 @@ export type { Response, PromiseResponse }
 // axios 请求拦截器
 Service.interceptors.request.use(
   config => {
-    if (localStorage.getItem('access_token')) {
-      config.headers.Authorization = localStorage.getItem('access_token')
+    if (localStorage.getItem('ACCESS_TOKEN')) {
+      config.headers.Authorization = localStorage.getItem('ACCESS_TOKEN')
     }
     return config
   },

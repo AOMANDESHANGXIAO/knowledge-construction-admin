@@ -37,7 +37,7 @@ const { loading, run } = useRequest<LoginResult>({
   onSuccess: res => {
     const { setUserStore } = useUserStore()
     setUserStore(res)
-    router.push('/')
+    router.push('/home')
   },
   onFailure: () => {
     console.log('登录失败')
@@ -57,6 +57,7 @@ const handleLogin = () => {
       })
     }
     run()
+    // 跳转
   })
 }
 </script>

@@ -12,6 +12,7 @@ const routes: Array<RouteRecordRaw> = [
       title: 'index',
     },
     redirect() {
+      console.log('跳转登录')
       return redirecter.initDirect()
     },
   },

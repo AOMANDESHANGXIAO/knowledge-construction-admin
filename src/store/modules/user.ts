@@ -77,6 +77,7 @@ export const useUserStore = defineStore(
       setUserStore,
       getToken,
       logOut,
+      ACCESS_TOKEN_KEY
     }
   },
   {
