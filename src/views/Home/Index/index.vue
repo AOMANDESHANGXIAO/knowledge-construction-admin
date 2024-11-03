@@ -108,7 +108,8 @@ const logout = () => {
   height: 100vh;
   width: 100vw;
   overflow-x: auto;
-  overflow-y: hidden;
+  flex-direction: row;
+  // overflow-y: hidden;
   //background-color: #888888;
 
   .menu-tab {
@@ -163,7 +164,7 @@ const logout = () => {
       width: 100%; /* 宽度与菜单相同 */
       background-color: var(--st-cool-black-color); /* 继承背景颜色 */
       border-top: 1px solid #333; /* 可选：添加顶部边框 */
-      margin-bottom: 10px;
+      // margin-bottom: 10px;
       &:hover {
         background-color: var(--st-theme-color);
       }

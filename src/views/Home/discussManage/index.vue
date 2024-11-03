@@ -183,7 +183,11 @@ const { data, currentPage, pageSize, totalNum } = useTable<any, Topic>({
   gap: 10px;
   height: 100%;
   width: 100%;
+  // width: calc(100% - 150px);
   padding: 10px;
+  // background-color: pink;
+  box-sizing: border-box;
+  overflow: hidden;
 
   .control-group {
     display: flex;

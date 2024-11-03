@@ -14,6 +14,8 @@ import WordCloudUI from '@/components/wordCloudUI/index.vue'
 import { VueUiWordCloudDatasetItem } from 'vue-data-ui'
 import FlowAPI, { QueryWordCloudResult } from '@/apis/flow'
 import _ from 'lodash'
+import useViewScroll from '@/hooks/useViewScroll'
+
 defineOptions({
   name: 'processManage',
 })
@@ -410,13 +412,94 @@ const handleRefresh = () => {
     getWordCloud()
   }
 }
+/**
+ * TODO: 添加发布作业的功能
+ */
+const homeworkContent = ref('')
+const handlePublish = () => {}
+type ViewScrollElements = 'TOPIC' | 'IDEA' | 'WORDCLOUD' | 'HOMEWORK'
+const scrollDoms: {
+  [key in ViewScrollElements]: {
+    id: string
+  }
+} = {
+  TOPIC: {
+    id: 'topic-dom',
+  },
+  IDEA: {
+    id: 'idea-dom',
+  },
+  WORDCLOUD: {
+    // ref: () => {
+    //   return wordCloudRef.value
+    // },
+    id: 'wordCloud-dom',
+  },
+  HOMEWORK: {
+    id: 'homework-dom',
+  },
+}
+const handleViewScroll = (archor: ViewScrollElements) => {
+  const element = scrollDoms[archor]
+  if (!(element && 'id' in element)) {
+    return
+  }
+  const dom = document.getElementById(element.id)
+  if (!dom) {
+    return
+  }
+  dom.scrollIntoView()
+}
 </script>
 
 <template>
   <div class="container">
+    <!-- 按钮集合，用于切换视图的位置 -->
+    <section class="view-control-buttons">
+      <el-button
+        type="primary"
+        @click="
+          () => {
+            handleViewScroll('TOPIC')
+          }
+        "
+      >
+        话题
+      </el-button>
+      <el-button
+        type="primary"
+        @click="
+          () => {
+            handleViewScroll('IDEA')
+          }
+        "
+      >
+        观点
+      </el-button>
+      <el-button
+        type="primary"
+        @click="
+          () => {
+            handleViewScroll('WORDCLOUD')
+          }
+        "
+      >
+        词云
+      </el-button>
+      <el-button
+        type="primary"
+        @click="
+          () => {
+            handleViewScroll('HOMEWORK')
+          }
+        "
+      >
+        作业
+      </el-button>
+    </section>
     <el-scrollbar style="height: 100%">
       <!-- 显示当前正在管理的话题的信息 -->
-      <header>
+      <header id="topic-dom">
         <section class="title">⭐话题信息</section>
         <h2>当前话题:{{ currentTopic.content }}</h2>
         <h3>所属班级:{{ currentTopic.className }}</h3>
@@ -431,7 +514,7 @@ const handleRefresh = () => {
         </el-steps>
       </header>
       <!-- 控制器，包括修改状态的空间 -->
-      <main>
+      <main id="idea-dom">
         <section class="title">⭐控制话题</section>
         <el-form style="padding-top: 10px">
           <el-row :gutter="20" style="padding-top: 10px">
@@ -477,8 +560,8 @@ const handleRefresh = () => {
       <!-- table区域，显示当前话题参与的每个组的情况 -->
       <footer>
         <!-- 评分 -->
-        <el-row style="width: 100%; height: 500px">
-          <el-col :span="24">
+        <el-row style="width: 100%">
+          <el-col :span="24" style="padding-top: 10px">
             <rate-card
               :publish-time="rateCardData.pulishTime"
               :publisher="rateCardData.publisher"
@@ -571,6 +654,7 @@ const handleRefresh = () => {
         <el-row
           style="width: 100%; height: 100px"
           class="flex-space-between control-box"
+          id="wordCloud-dom"
         >
           <div class="title">小组讨论词云一览:</div>
           <el-icon
@@ -596,9 +680,27 @@ const handleRefresh = () => {
             <el-empty>暂未选择任何讨论</el-empty>
           </div>
         </el-row>
-        <!-- 学生评价一览 -->
-        <!-- <el-row style="width: 100%; height: 100px" class="flex-space-between control-box">
-        </el-row> -->
+        <!-- 发布作业 -->
+        <div style="width: 100%" class="publish-form-box" id="homework-dom">
+          <!-- 选择了讨论话题 -->
+          <section v-if="topicId">
+            <el-form style="width: 500px">
+              <el-form-item label="作业内容">
+                <el-input
+                  type="textarea"
+                  placeholder="请输入作业内容"
+                  v-model="homeworkContent"
+                ></el-input>
+              </el-form-item>
+            </el-form>
+            <el-button type="primary" @click="handlePublish"
+              >发布作业</el-button
+            >
+          </section>
+          <div v-else>
+            <el-empty description="请选择讨论话题"></el-empty>
+          </div>
+        </div>
       </footer>
     </el-scrollbar>
   </div>
@@ -614,6 +716,28 @@ const handleRefresh = () => {
   .title {
     font-size: 20px;
     font-weight: 700;
+  }
+  .view-control-buttons {
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100px;
+    // height: 50px;
+    padding: 10px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    border-bottom: 1px solid #ccc;
+    z-index: 100;
+    .button {
+      flex: 1;
+    }
+    &:deep(.el-button) {
+      margin: 0;
+    }
   }
 
   header {
@@ -737,7 +861,14 @@ const handleRefresh = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 300px;
+  // height: 300px;
+  background-color: #fff;
+  border-radius: 10px;
+}
+.publish-form-box {
+  margin-top: 30px;
+  padding: 30px;
+  box-sizing: content-box;
   background-color: #fff;
   border-radius: 10px;
 }
