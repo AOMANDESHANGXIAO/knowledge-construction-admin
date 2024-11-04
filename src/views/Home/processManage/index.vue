@@ -15,6 +15,8 @@ import { VueUiWordCloudDatasetItem } from 'vue-data-ui'
 import FlowAPI, { QueryWordCloudResult } from '@/apis/flow'
 import _ from 'lodash'
 import useViewScroll from '@/hooks/useViewScroll'
+import CourseWorkAPI from '@/apis/courseWork'
+import type { FormInstance, FormRules } from 'element-plus'
 
 defineOptions({
   name: 'processManage',
@@ -415,8 +417,85 @@ const handleRefresh = () => {
 /**
  * TODO: 添加发布作业的功能
  */
-const homeworkContent = ref('')
-const handlePublish = () => {}
+const publishFormData = reactive({
+  content: '',
+})
+
+const isEditing = ref(false)
+const publishFormRef = ref<FormInstance | null>(null)
+const publishFormRules: FormRules = {
+  content: [
+    {
+      required: true,
+      message: '作业内容不能为空',
+      trigger: 'blur',
+    },
+  ],
+}
+
+const handlePublish = () => {
+  if (!publishFormRef.value) return
+  publishFormRef.value.validate((valid: boolean) => {
+    if (valid) {
+      addCourseWork()
+    }
+  })
+}
+
+const { run: addCourseWork, loading: addCourseWorkLoading } = useRequest({
+  apiFn: () => {
+    return CourseWorkAPI.add({
+      topic_id: topicId.value as number,
+      content: publishFormData.content,
+    })
+  },
+  onSuccess: () => {
+    getCourseWork()
+  },
+  defaultNotify: true,
+})
+
+const { run: getCourseWork } = useRequest({
+  apiFn: async () => {
+    if (!topicId.value)
+      return Promise.resolve({
+        data: {
+          courseWork: '',
+        },
+        message: '暂无作业',
+        success: true,
+        code: 200,
+      })
+    return CourseWorkAPI.findOne(topicId.value as number)
+  },
+  onSuccess: (res: { courseWork: string }) => {
+    if (res.courseWork) {
+      publishFormData.content = res.courseWork
+      // 设置为非编辑状态
+      isEditing.value = false
+    } else {
+      // 如果没有作业，设置为编辑状态
+      publishFormData.content = ''
+      isEditing.value = true
+    }
+  },
+  immediate: true,
+})
+
+watch(
+  () => topicId.value,
+  async () => {
+    if (topicId.value) {
+      await getCourseWork()
+    }
+  }
+)
+const handleEditCourseWork = () => {
+  isEditing.value = true
+}
+/**
+ * 控制滚动视图的位置
+ */
 type ViewScrollElements = 'TOPIC' | 'IDEA' | 'WORDCLOUD' | 'HOMEWORK'
 const scrollDoms: {
   [key in ViewScrollElements]: {
@@ -448,7 +527,7 @@ const handleViewScroll = (archor: ViewScrollElements) => {
   if (!dom) {
     return
   }
-  dom.scrollIntoView()
+  useViewScroll(dom)
 }
 </script>
 
@@ -683,22 +762,41 @@ const handleViewScroll = (archor: ViewScrollElements) => {
         <!-- 发布作业 -->
         <div style="width: 100%" class="publish-form-box" id="homework-dom">
           <!-- 选择了讨论话题 -->
-          <section v-if="topicId">
-            <el-form style="width: 500px">
-              <el-form-item label="作业内容">
+          <section v-if="topicId && isEditing">
+            <!-- 如果选择了话题 -->
+            <el-form
+              style="width: 500px"
+              ref="publishFormRef"
+              :model="publishFormData"
+              :rules="publishFormRules"
+            >
+              <el-form-item label="作业内容" prop="content">
                 <el-input
                   type="textarea"
                   placeholder="请输入作业内容"
-                  v-model="homeworkContent"
+                  v-model="publishFormData.content"
+                  :maxlength="200"
+                  show-word-limit
                 ></el-input>
               </el-form-item>
             </el-form>
-            <el-button type="primary" @click="handlePublish"
+            <el-button
+              type="primary"
+              @click="handlePublish"
+              :loading="addCourseWorkLoading"
               >发布作业</el-button
             >
           </section>
-          <div v-else>
+          <el-empty v-else>
             <el-empty description="请选择讨论话题"></el-empty>
+          </el-empty>
+          <!-- 如果已经有话题了 -->
+          <div class="show-content" v-if="!isEditing">
+            <div class="title">>>已发布的作业:</div>
+            <p class="content">{{ publishFormData.content }}</p>
+            <el-button type="primary" @click="handleEditCourseWork"
+              >修改作业</el-button
+            >
           </div>
         </div>
       </footer>
@@ -871,5 +969,30 @@ const handleViewScroll = (archor: ViewScrollElements) => {
   box-sizing: content-box;
   background-color: #fff;
   border-radius: 10px;
+}
+.show-content {
+  display: flex;
+  flex-direction: column;
+  // align-items: center;
+  gap: 10px;
+  width: 100%;
+  // min-height: 300px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  .title {
+    font-size: 20px;
+    font-weight: 500;
+  }
+  .content {
+    font-size: 18px;
+    font-weight: 300;
+    color: #666;
+  }
+  //&:deep(.el-text) {
+  //font-size: 18px;
+  //font-weight: 300;
+  //color: #666;
+  //}
 }
 </style>
